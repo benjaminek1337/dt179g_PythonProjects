@@ -41,9 +41,10 @@ def authenticate_user(credentials: str) -> bool:
     RETURN outcome of validation as BOOLEAN VALUE.
     '''
     c = credentials.split()
-    user_tmp = f"{c[0]} {c[1]}"
-    pass_tmp = c[2]
-    return format_username(user_tmp) == username and decrypt_password(pass_tmp) == password
+    user_tmp = format_username(f"{c[0]} {c[1]}")
+    pass_tmp = decrypt_password(c[2])
+    is_validated = user_tmp == username and pass_tmp == password
+    return is_validated
 
 
 def format_username(username: str) -> str:
