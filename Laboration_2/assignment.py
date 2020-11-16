@@ -40,7 +40,10 @@ def authenticate_user(credentials: str) -> bool:
     VALIDATE that both values corresponds to expected credentials.
     RETURN outcome of validation as BOOLEAN VALUE.
     '''
-    pass  # TODO: Replace with implementation!
+    c = credentials.split()
+    user_tmp = f"{c[0]} {c[1]}"
+    pass_tmp = c[2]
+    return format_username(user_tmp) == username and decrypt_password(pass_tmp) == password
 
 
 def format_username(username: str) -> str:
@@ -52,7 +55,8 @@ def format_username(username: str) -> str:
     REPLACE empty space between given name and surname with UNDERSCORE '_'
     RETURN formatted username as string value.
     '''
-    pass  # TODO: Replace with implementation!
+    u = username.split()
+    return f"{u[0].capitalize()}_{u[1].capitalize()}"
 
 
 def decrypt_password(password: str) -> str:
@@ -70,7 +74,12 @@ def decrypt_password(password: str) -> str:
     }
     RETURN decrypted string value
     '''
-    pass  # TODO: Replace with implementation!
+    for i in range(len(password)):
+        is_vowel = vowels.find(password[i])
+        key = rot7 if i % 2 == 0 else rot9
+        decrypted_value = chr(ord(password[i]) + key) if is_vowel == -1 else f"0{chr(ord(password[i]) + key)}0"
+        decrypted += decrypted_value
+    return decrypted
 
 
 if __name__ == "__main__":
