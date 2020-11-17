@@ -19,9 +19,6 @@ Expected output:
     -5 + 8 + 7.6 = 10
 '''
 
-# TODO: implement your solution for pseudo code!
-
-
 TOTAL = A + int(B) + int(C)
 
 print("{} + {} + {} = {}".format(A, B, C, TOTAL))  # DO NOT MODIFY
@@ -39,8 +36,6 @@ IF True STORE "true that" in variable 'OUTPUT' ELSE STORE "nope".
 Expected output:
     Value of 'TOTAL' exists in string: true that
 '''
-
-# TODO: implement your solution for pseudo code!
 
 if str(TOTAL) in TEXT:
     OUTPUT = "true that"
