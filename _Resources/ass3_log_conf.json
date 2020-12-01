@@ -31,9 +31,5 @@
       "handlers": ["console_handler", "file_handler"],
       "propagate": "no"
     }
-  },
-  "root": {
-    "level": "DEBUG",
-    "handlers": ["console_handler"]
   }
 }
