@@ -31,9 +31,9 @@ LOGGER = None  # declared at module level, will be defined from main()
 def create_logger() -> logging.Logger:
     """Create and return logger object."""
     file_path = RESOURCES / "ass3_log_conf.json"  # Get the filepath to the logger config file
-    with open(file_path, "r") as file:  # Open the logger config file
+    with open(file_path, "r") as file:  # Open the logger config file in read mode
         config = json.load(file)  # Write the json data to variable
-        logging.config.dictConfig(config)  # Configure logger
+        logging.config.dictConfig(config)  # Configure logger from json-file
         return logging.getLogger("ass_3_logger")  # Return logger with specified name
 
 
@@ -77,17 +77,22 @@ def fibonacci_recursive(nth_nmb: int) -> int:
     return fib(nth_nmb)
 
 
-memory = {0: 0, 1: 1}
-
-
 @measurements_decorator
 def fibonacci_memory(nth_nmb: int) -> int:
     """An recursive approach to find Fibonacci sequence value, storing those already calculated."""
+    memory = {0: 0, 1: 1}
+
     def fib(_n):
-        return _n if _n <= 1 else fib(_n - 1) + fib(_n - 2)
-    if nth_nmb not in memory:
-        memory[nth_nmb] = fib(nth_nmb)
-    return memory[nth_nmb]
+        if _n <= 1:
+            return _n
+        elif _n not in memory:
+            number = (list(memory.values())[-1] + list(memory.values())[-2])
+            memory[(list(memory.keys())[-1] + 1)] = number
+            return fib(_n)
+        else:
+            return list(memory.values())[-1]
+
+    return fib(nth_nmb)
 
 
 def duration_format(duration: float, precision: str) -> str:
@@ -128,9 +133,8 @@ def print_statistics(fib_details: dict, nth_value: int):
 def write_to_file(fib_details: dict):
     """Function to write information to file."""
     for key in fib_details:  # Iterate through dict
-        file_name = key.replace(" ", "_") + ".txt"
-        with open(RESOURCES / file_name, "w") as file1:  # Open/create file with key as basis
-            # for filename
+        file_name = key.replace(" ", "_") + ".txt"  # Create filename with key as basis
+        with open(RESOURCES / file_name, "w") as file1:  # Open/create file
             fib_details[key][1].reverse()  # Reverse the logged fibonacci values in dict
             for i in range(len(fib_details[key][1]) - 1, -1, -1):  # Iterate the fibonacci values in dict
                 value = fib_details[key][1][i]  # Write the current value to variable
