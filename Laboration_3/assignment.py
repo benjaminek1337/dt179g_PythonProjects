@@ -80,17 +80,17 @@ def fibonacci_recursive(nth_nmb: int) -> int:
 @measurements_decorator
 def fibonacci_memory(nth_nmb: int) -> int:
     """An recursive approach to find Fibonacci sequence value, storing those already calculated."""
-    memory = {0: 0, 1: 1}
+    memory: dict = {0: 0, 1: 1}  # Cache to store calculated fib values in
 
     def fib(_n):
         if _n <= 1:
-            return _n
+            return _n  # Return input nr
         elif _n not in memory:
-            number = (list(memory.values())[-1] + list(memory.values())[-2])
-            memory[(list(memory.keys())[-1] + 1)] = number
-            return fib(_n)
+            # Calculate fib value, store in dict
+            memory[list(memory.keys())[-1] + 1] = list(memory.values())[-1] + list(memory.values())[-2]
+            return fib(_n)  # return run fib function again
         else:
-            return list(memory.values())[-1]
+            return list(memory.values())[-1]  # Return specified element from cache
 
     return fib(nth_nmb)
 
