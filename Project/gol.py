@@ -48,7 +48,25 @@ RESOURCES = Path(__file__).parent / "../_Resources/"
 
 def load_seed_from_file(_file_name: str) -> tuple:
     """ Load population seed from file. Returns tuple: population (dict) and world_size (tuple). """
-    pass
+    file_name = _file_name if ".json" in _file_name else _file_name + ".json"
+    file_path = RESOURCES / file_name
+    print(file_path)
+    with open(file_path, "r") as file:
+        data = json.load(file)
+        population: dict = data["population"]
+        output: dict = {}
+        for key in population:
+            if population[key] is not None:
+                neighbours: list = list(tuple(i) for i in population[key]["neighbours"])
+                output[literal_eval(key)] = {
+                    "state": population[key]["state"],
+                    "neighbours": neighbours
+                }
+            else:
+                output[literal_eval(key)] = None
+
+        seed: tuple = output, data["world_size"]
+        return seed
 
 
 def create_logger() -> logging.Logger:
@@ -81,12 +99,14 @@ def parse_world_size_arg(_arg: str) -> tuple:
         print("Using default world size: 80x40")
         x_axis = 80
         y_axis = 40
+        sleep(1)
     except ValueError as error:
         msg: str = "Both width and height needs to have positive values above zero."
         print(error) if (len(str(error)) > 0) else print(msg)
         print("Using default world size: 80x40")
         x_axis = 80
         y_axis = 40
+        sleep(1)
     else:
         x_axis: int = int(args_split[0])
         y_axis: int = int(args_split[1])
@@ -112,12 +132,12 @@ def populate_world(_world_size: tuple, _seed_pattern: str = None) -> dict:
             if pattern:
                 population[coords[i]] = {
                     "state": cb.STATE_ALIVE if coords[i] in pattern else cb.STATE_DEAD,
-                    "neighbors": calc_neighbour_positions(coords[i])
+                    "neighbours": calc_neighbour_positions(coords[i])
                 }
             else:
                 population[coords[i]] = {
                     "state": cb.STATE_ALIVE if random.randint(0, 21) >= 15 else cb.STATE_DEAD,
-                    "neighbors": calc_neighbour_positions(coords[i])
+                    "neighbours": calc_neighbour_positions(coords[i])
                 }
     return population
 
@@ -159,21 +179,21 @@ def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
         if _cur_gen[key] is None:
             next_generation[key] = None
         else:
-            living: int = count_alive_neighbours(_cur_gen[key]["neighbors"], _cur_gen)
+            living: int = count_alive_neighbours(_cur_gen[key]["neighbours"], _cur_gen)
             if _cur_gen[key]["state"] == "X" and 2 <= living <= 3:
                 next_generation[key] = {
                     "state": cb.STATE_ALIVE,
-                    "neighbors": _cur_gen[key]["neighbors"]
+                    "neighbours": _cur_gen[key]["neighbours"]
                 }
             elif _cur_gen[key]["state"] == "-" and living == 3:
                 next_generation[key] = {
                     "state": cb.STATE_ALIVE,
-                    "neighbors": _cur_gen[key]["neighbors"]
+                    "neighbours": _cur_gen[key]["neighbours"]
                 }
             else:
                 next_generation[key] = {
                     "state": cb.STATE_DEAD,
-                    "neighbors": _cur_gen[key]["neighbors"]
+                    "neighbours": _cur_gen[key]["neighbours"]
                 }
     return next_generation
 
