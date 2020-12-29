@@ -33,7 +33,6 @@ from pathlib import Path
 from ast import literal_eval
 from time import sleep
 from itertools import product
-from timeit import default_timer as timer
 
 import Project.code_base as cb
 
