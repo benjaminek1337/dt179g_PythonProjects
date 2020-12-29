@@ -64,7 +64,6 @@ def load_seed_from_file(_file_name: str) -> tuple:
                 }
             else:
                 output[literal_eval(key)] = None
-
         seed: tuple = output, data["world_size"]
         return seed
 
