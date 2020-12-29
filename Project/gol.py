@@ -139,15 +139,14 @@ def calc_neighbour_positions(_cell_coord: tuple) -> list:
     return neighbors
 
 
-def run_simulation(_generations: int, _population: dict, _world_size: tuple):
+def run_simulation(_nth_generation: int, _population: dict, _world_size: tuple):
     """ Runs simulation for specified amount of generations. """
-    start = timer()
     population: dict = _population
-    for i in range(0, _generations):
-        cb.clear_console()
-        population = update_world(population, _world_size)
-        sleep(0.2)
-    end = timer()
+    cb.clear_console()
+    population = update_world(population, _world_size)
+    sleep(0.2)
+    if _nth_generation > 0:
+        run_simulation(_nth_generation - 1, population, _world_size)
 
 
 def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
