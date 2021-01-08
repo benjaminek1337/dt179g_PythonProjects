@@ -50,32 +50,63 @@ def load_seed_from_file(_file_name: str) -> tuple:
     """ Load population seed from file. Returns tuple: population (dict) and world_size (tuple). """
     file_name = _file_name if ".json" in _file_name else _file_name + ".json"
     file_path = RESOURCES / file_name
-    print(file_path)
+
     with open(file_path, "r") as file:
         data = json.load(file)
-        population: dict = data["population"]
-        output: dict = {}
-        for key in population:
-            if population[key] is not None:
-                neighbours: list = list(tuple(i) for i in population[key]["neighbours"])
-                output[literal_eval(key)] = {
-                    "state": population[key]["state"],
+        raw_population: dict = data["population"]
+        parsed_population: dict = {}
+        for key in raw_population:
+            if raw_population[key] is not None:
+                neighbours: list = list(tuple(i) for i in raw_population[key]["neighbours"])
+                parsed_population[literal_eval(key)] = {
+                    "state": raw_population[key]["state"],
                     "neighbours": neighbours
                 }
             else:
-                output[literal_eval(key)] = None
-        seed: tuple = output, data["world_size"]
+                parsed_population[literal_eval(key)] = None
+        seed: tuple = parsed_population, data["world_size"]
         return seed
 
 
 def create_logger() -> logging.Logger:
     """ Creates a logging object to be used for reports. """
-    pass
+    file_path = RESOURCES / "gol.log"
+    gol_logger = logging.getLogger("gol_logger")
+    gol_logger.setLevel(logging.INFO)
+    file_handler = logging.FileHandler(file_path)
+    file_handler.setLevel(logging.INFO)
+    gol_logger.addHandler(file_handler)
+    return gol_logger
 
 
 def simulation_decorator(func):
     """ Function decorator, used to run full extent of simulation. """
-    pass
+    def wrapper(nth_generation: int, population: dict, world_size: tuple):
+        gol_logger = create_logger()
+        current_population: dict = population
+
+        for i in range(0, nth_generation):
+            cb.clear_console()
+            population_count: int = 0
+            alive_count: int = 0
+            dead_count: int = 0
+            for key in current_population:
+                if current_population[key] is not None:
+                    population_count += 1
+                    if current_population[key]["state"] == "X":
+                        alive_count += 1
+                    else:
+                        dead_count += 1
+
+            gol_logger.info(f"GENERATION {i} \n"
+                            f" Population: {population_count} \n"
+                            f" Alive: {alive_count} \n"
+                            f" Dead: {dead_count}")
+
+            current_population = func(i, current_population, world_size)
+            sleep(0.2)
+
+    return wrapper
 
 
 # -----------------------------------------
@@ -84,33 +115,25 @@ def simulation_decorator(func):
 
 def parse_world_size_arg(_arg: str) -> tuple:
     """ Parse width and height from command argument. """
-    args_split = _arg.split("x")
+    args = _arg.split("x")
     y_axis: int
     x_axis: int
     try:
-        for i in range(len(args_split)):
-            if len(args_split) != 2 or args_split[i] == "":
+        for i in range(len(args)):
+            if len(args) != 2 or args[i] == "":
                 raise AssertionError
-            if not isinstance(int(args_split[i]), int) or int(args_split[i]) < 1:
+            if not isinstance(int(args[i]), int) or int(args[i]) < 1:
                 raise ValueError
+        return int(args[0]), int(args[1])
     except AssertionError:
         print("World size should contain width and height, separated by ‘x’. Ex: ‘80x40’")
-        print("Using default world size: 80x40")
-        x_axis = 80
-        y_axis = 40
-        sleep(1)
     except ValueError as error:
         msg: str = "Both width and height needs to have positive values above zero."
         print(error) if (len(str(error)) > 0) else print(msg)
-        print("Using default world size: 80x40")
-        x_axis = 80
-        y_axis = 40
-        sleep(1)
-    else:
-        x_axis: int = int(args_split[0])
-        y_axis: int = int(args_split[1])
 
-    return x_axis, y_axis
+    print("Using default world size: 80x40")
+    sleep(1)
+    return 80, 40
 
 
 def populate_world(_world_size: tuple, _seed_pattern: str = None) -> dict:
@@ -157,14 +180,10 @@ def calc_neighbour_positions(_cell_coord: tuple) -> list:
     return neighbors
 
 
-def run_simulation(_nth_generation: int, _population: dict, _world_size: tuple):
-    """ Runs simulation for specified amount of generations. """
-    population: dict = _population
-    cb.clear_console()
-    population = update_world(population, _world_size)
-    sleep(0.2)
-    if _nth_generation > 0:
-        run_simulation(_nth_generation - 1, population, _world_size)
+@simulation_decorator
+def run_simulation(_generations: int, _population: dict, _world_size: tuple) -> dict:
+    """ Runs a tick in the simulation. """
+    return update_world(_population, _world_size)
 
 
 def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
@@ -179,12 +198,7 @@ def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
             next_generation[key] = None
         else:
             living: int = count_alive_neighbours(_cur_gen[key]["neighbours"], _cur_gen)
-            if _cur_gen[key]["state"] == "X" and 2 <= living <= 3:
-                next_generation[key] = {
-                    "state": cb.STATE_ALIVE,
-                    "neighbours": _cur_gen[key]["neighbours"]
-                }
-            elif _cur_gen[key]["state"] == "-" and living == 3:
+            if _cur_gen[key]["state"] == "X" and 2 <= living <= 3 or _cur_gen[key]["state"] == "-" and living == 3:
                 next_generation[key] = {
                     "state": cb.STATE_ALIVE,
                     "neighbours": _cur_gen[key]["neighbours"]
