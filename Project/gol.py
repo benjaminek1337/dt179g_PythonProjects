@@ -63,7 +63,7 @@ def load_seed_from_file(_file_name: str) -> tuple:
                     "neighbours": neighbours
                 }
             else:
-                parsed_population[literal_eval(key)] = None
+                parsed_population[literal_eval(key)] = cb.STATE_RIM
         seed: tuple = parsed_population, data["world_size"]
         return seed
 
@@ -89,18 +89,26 @@ def simulation_decorator(func):
             cb.clear_console()
             population_count: int = 0
             alive_count: int = 0
+            elder_count: int = 0
+            prime_elder_count: int = 0
             dead_count: int = 0
-            for key in current_population:
-                if current_population[key] is not None:
+            for coords in current_population:
+                if current_population[coords] is not cb.STATE_RIM:
                     population_count += 1
-                    if current_population[key]["state"] == "X":
+                    if current_population[coords]["state"] != cb.STATE_DEAD:
                         alive_count += 1
+                        if current_population[coords]["state"] == cb.STATE_ELDER:
+                            elder_count += 1
+                        elif current_population[coords]["state"] == cb.STATE_PRIME_ELDER:
+                            prime_elder_count += 1
                     else:
                         dead_count += 1
 
             gol_logger.info(f"GENERATION {i} \n"
                             f" Population: {population_count} \n"
                             f" Alive: {alive_count} \n"
+                            f" Elders: {elder_count} \n"
+                            f" Prime: {prime_elder_count} \n"
                             f" Dead: {dead_count}")
 
             current_population = func(i, current_population, world_size)
@@ -148,17 +156,19 @@ def populate_world(_world_size: tuple, _seed_pattern: str = None) -> dict:
                 or coords[i][0] == _world_size[1] - 1 \
                 or coords[i][1] == 0 \
                 or coords[i][1] == _world_size[0] - 1:
-            population[coords[i]] = None
+            population[coords[i]] = cb.STATE_RIM
         else:
             if pattern:
                 population[coords[i]] = {
                     "state": cb.STATE_ALIVE if coords[i] in pattern else cb.STATE_DEAD,
-                    "neighbours": calc_neighbour_positions(coords[i])
+                    "neighbours": calc_neighbour_positions(coords[i]),
+                    "age": 0
                 }
             else:
                 population[coords[i]] = {
                     "state": cb.STATE_ALIVE if random.randint(0, 21) >= 15 else cb.STATE_DEAD,
-                    "neighbours": calc_neighbour_positions(coords[i])
+                    "neighbours": calc_neighbour_positions(coords[i]),
+                    "age": 0
                 }
     return population
 
@@ -189,23 +199,37 @@ def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
     """ Represents a tick in the simulation. """
     next_generation: dict = {}
     for key in _cur_gen:
-        out_str: str = cb.get_print_value(cb.STATE_RIM) if _cur_gen[key] is None \
+        out_str: str = cb.get_print_value(cb.STATE_RIM) if _cur_gen[key] is cb.STATE_RIM \
             else cb.get_print_value(_cur_gen[key]["state"])
         cb.progress(out_str + "\n" if key[1] == _world_size[0] - 1 else out_str)
 
-        if _cur_gen[key] is None:
-            next_generation[key] = None
+        if _cur_gen[key] is cb.STATE_RIM:
+            next_generation[key] = cb.STATE_RIM
         else:
             living: int = count_alive_neighbours(_cur_gen[key]["neighbours"], _cur_gen)
-            if _cur_gen[key]["state"] == "X" and 2 <= living <= 3 or _cur_gen[key]["state"] == "-" and living == 3:
+            if _cur_gen[key]["state"] != cb.STATE_DEAD and 2 <= living <= 3 \
+                    or _cur_gen[key]["state"] == cb.STATE_DEAD and living == 3:
+
+                try:
+                    age: int = _cur_gen[key]["age"] + 1
+                except KeyError:
+                    age: int = 1
+
                 next_generation[key] = {
-                    "state": cb.STATE_ALIVE,
-                    "neighbours": _cur_gen[key]["neighbours"]
+                    "neighbours": _cur_gen[key]["neighbours"],
+                    "age": age
                 }
+                if age < 5:
+                    next_generation[key]["state"] = cb.STATE_ALIVE
+                elif 5 <= age <= 10:
+                    next_generation[key]["state"] = cb.STATE_ELDER
+                else:
+                    next_generation[key]["state"] = cb.STATE_PRIME_ELDER
             else:
                 next_generation[key] = {
                     "state": cb.STATE_DEAD,
-                    "neighbours": _cur_gen[key]["neighbours"]
+                    "neighbours": _cur_gen[key]["neighbours"],
+                    "age": 0
                 }
     return next_generation
 
@@ -214,7 +238,7 @@ def count_alive_neighbours(_neighbours: list, _cells: dict) -> int:
     """ Determine how many of the neighbouring cells are currently alive. """
     living: int = 0
     for coords in _neighbours:
-        if _cells[coords] is not None and _cells[coords]["state"] == "X":
+        if _cells[coords] is not cb.STATE_RIM and _cells[coords]["state"] != cb.STATE_DEAD:
             living += 1
     return living
 
