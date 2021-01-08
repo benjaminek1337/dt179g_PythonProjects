@@ -116,8 +116,7 @@ def simulation_decorator(func):
 def parse_world_size_arg(_arg: str) -> tuple:
     """ Parse width and height from command argument. """
     args = _arg.split("x")
-    y_axis: int
-    x_axis: int
+
     try:
         for i in range(len(args)):
             if len(args) != 2 or args[i] == "":
