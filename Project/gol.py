@@ -221,7 +221,7 @@ def update_world(_cur_gen: dict, _world_size: tuple) -> dict:
                 }
                 if age < 5:
                     next_generation[key]["state"] = cb.STATE_ALIVE
-                elif 5 <= age <= 10:
+                elif 5 <= age <= 9:
                     next_generation[key]["state"] = cb.STATE_ELDER
                 else:
                     next_generation[key]["state"] = cb.STATE_PRIME_ELDER
