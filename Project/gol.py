@@ -105,11 +105,11 @@ def simulation_decorator(func):
                         dead_count += 1
 
             gol_logger.info(f"GENERATION {i} \n"
-                            f" Population: {population_count} \n"
-                            f" Alive: {alive_count} \n"
-                            f" Elders: {elder_count} \n"
-                            f" Prime: {prime_elder_count} \n"
-                            f" Dead: {dead_count} \n")
+                            f"  Population: {population_count} \n"
+                            f"  Alive: {alive_count} \n"
+                            f"  Elders: {elder_count} \n"
+                            f"  Prime Elders: {prime_elder_count} \n"
+                            f"  Dead: {dead_count}")
 
             current_population = func(i, current_population, world_size)
             sleep(0.2)
