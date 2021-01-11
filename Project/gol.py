@@ -109,7 +109,7 @@ def simulation_decorator(func):
                             f" Alive: {alive_count} \n"
                             f" Elders: {elder_count} \n"
                             f" Prime: {prime_elder_count} \n"
-                            f" Dead: {dead_count}")
+                            f" Dead: {dead_count} \n")
 
             current_population = func(i, current_population, world_size)
             sleep(0.2)
